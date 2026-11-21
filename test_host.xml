@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HttpHostNotification version="2.0" xmlns="http://www.isapi.org/ver20/XMLSchema">
+<id>1</id>
+<url>/api/hikEvents</url>
+<protocolType>HTTPS</protocolType>
+<parameterFormatType>XML</parameterFormatType>
+<addressingFormatType>hostname</addressingFormatType>
+<hostName>rendernodejs-hgdi.onrender.com</hostName>
+<portNo>443</portNo>
+<httpAuthenticationMethod>none</httpAuthenticationMethod>
+</HttpHostNotification>

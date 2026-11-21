@@ -1,14 +1,23 @@
 {
   "name": "render-hikvision-listener",
-  "version": "1.0.0",
-  "description": "Lightweight Hikvision Event Listener Server for Render",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Next.js attendance app for Hikvision DS-K1T342MFWX-E1",
+  "private": true,
   "scripts": {
-    "start": "node index.js"
+    "dev": "next dev --port 3050",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1"
+    "next": "^15.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "undici": "^7.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2"
   }
 }

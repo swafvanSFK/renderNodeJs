@@ -1,56 +1,46 @@
-# Hikvision Event Listener on Render
+# Hikvision attendance (Next.js)
 
-Lightweight Node.js service to receive and log HTTP Listening / Alarm Host events pushed from Hikvision access control terminals.
+Live attendance and people management for a **Hikvision DS-K1T342MFWX-E1** (face, fingerprint, and card).
 
-## Features
-- Handles `POST /api/hikEvents` (multipart form-data & JSON).
-- Automatically parses Hikvision `event_log` / `AccessControllerEvent`.
-- Extracts Employee PIN, Name, SubEventType (fingerprint/face/card), and Punch Time.
-- Built-in live browser dashboard with auto-refresh at `https://<your-service>.onrender.com/`.
+The terminal pushes each authentication to this app. The People page adds, updates, and removes users on the terminal through ISAPI.
 
----
+## Run it on the office LAN
 
-## Deploying to Render (Free Web Service)
+People management calls the terminal at its private address (`192.168.10.16` in `net_if2.xml`). That only works from a computer on the same network. `test_local.xml` already points event pushes at `192.168.10.52` port `3050`.
 
-1. **Push to GitHub**:
-   ```bash
-   cd D:\App\renderNodeJs
-   git init
-   git add .
-   git commit -m "Hikvision Render Listener"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-   git push -u origin main
-   ```
+```bash
+cd D:\App\renderNodeJs
+npm install
+npm run dev
+```
 
-2. **Create Web Service on Render**:
-   - Go to [dashboard.render.com](https://dashboard.render.com).
-   - Click **New +** → **Web Service**.
-   - Select your GitHub repository.
-   - Configure:
-     - **Name**: `hik-listener` (or any name)
-     - **Region**: Choose closest to you (e.g. Frankfurt or Singapore)
-     - **Branch**: `main`
-     - **Runtime**: `Node`
-     - **Build Command**: `npm install`
-     - **Start Command**: `node index.js`
-     - **Instance Type**: `Free`
-   - Click **Deploy Web Service**.
+Open `http://localhost:3050`.
 
-3. **Get your Public URL**:
-   - Render will assign a public HTTPS domain:
-     `https://hik-listener.onrender.com`
+1. **Device** — enter the terminal IP (`192.168.10.16`), port `80`, and the admin username and password. Save, then **Test connection**.
+2. **Send events here** — writes HTTP listening host 1 on the terminal (`/api/hikEvents` on this PC). Or set the same values in the terminal web page: Network → Network Service → HTTP Listening.
+3. **People** — add a person (employee number, name, optional face photo), update them, or remove them.
+4. **Live** — authenticate on the terminal. The punch shows up immediately.
 
----
+Punches are stored in `data/attendance.json`. The device password is stored in `data/settings.json`. Both stay on this computer.
 
-## Configuring the Hikvision Terminal
+The listener accepts the JSON events this app asks the terminal to send, and the XML events from the existing `test_local.xml` configuration.
 
-In the Hikvision Web GUI:
-1. Go to **Network** → **Network Service** → **HTTP Listening**.
-2. Set:
-   - **Event Alarm IP/Domain Name**: `hik-listener.onrender.com` *(just the domain without https://)*
-   - **URL**: `/api/hikEvents`
-   - **Port**: `443`
-   - **Protocol**: `HTTPS`
-3. Click **Save**.
-4. Punch on the device and view live punches in your browser at `https://hik-listener.onrender.com/`.
+## Render
+
+A Render web service can receive punches if the terminal can reach the public URL, but it cannot manage users on `192.168.10.16`.
+
+- Build command: `npm install && npm run build`
+- Start command: `npm start`
+- HTTP Listening: host `your-service.onrender.com`, URL `/api/hikEvents`, port `443`, protocol HTTPS
+
+## Terminal calls used
+
+| Action | ISAPI |
+| --- | --- |
+| List people | `POST /ISAPI/AccessControl/UserInfo/Search?format=json` |
+| Add | `POST /ISAPI/AccessControl/UserInfo/Record?format=json` |
+| Update | `PUT /ISAPI/AccessControl/UserInfo/Modify?format=json` |
+| Remove | `PUT /ISAPI/AccessControl/UserInfoDetail/Delete?format=json` |
+| Face photo | `POST /ISAPI/Intelligent/FDLib/FaceDataRecord?format=json` |
+| Event target | `PUT /ISAPI/Event/notification/httpHosts/1` |
+| Incoming punches | `POST /api/hikEvents` |
