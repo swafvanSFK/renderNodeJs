@@ -39,8 +39,7 @@ export function AttendanceLive() {
   return (
     <>
       <div className="banner">
-        The terminal pushes each authentication to <code>/api/hikEvents</code>. This page updates the moment a punch arrives.
-        Point the device at this computer from the Device page. The sample listener address is <code>192.168.10.52:3050</code>.
+        The terminal pushes each authentication directly to <code>/api/hikEvents</code> over HTTPS. This page updates the moment a punch arrives.
       </div>
       <div className="stats">
         <div className="card stat">

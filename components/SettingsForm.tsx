@@ -131,7 +131,7 @@ export function SettingsForm() {
       <div className="card stack">
         <h2>Where punches are sent</h2>
         <p className="faint">
-          test_local.xml sends HTTP events to 192.168.10.52 port 3050, path /api/hikEvents. This app must run on that computer, on the same LAN as the terminal. A cloud host cannot add or remove people on a private IP.
+          The terminal pushes HTTP/HTTPS events to this address (path: <code>/api/hikEvents</code>). For your cloud server, use <code>attendance.sfkworks.online</code> on port <code>443</code> (HTTPS).
         </p>
         <label>
           This computer&apos;s LAN IP
