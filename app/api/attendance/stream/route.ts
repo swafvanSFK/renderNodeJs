@@ -9,12 +9,18 @@ export async function GET() {
   let cleanup = () => {};
 
   const stream = new ReadableStream({
-    start(controller) {
+    async start(controller) {
       const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        try {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          // Client disconnected
+        }
       };
 
-      send("snapshot", listPunches());
+      const initial = await listPunches();
+      send("snapshot", initial);
+
       const onPunch = (punch: unknown) => send("punch", punch);
       punchBus().on("punch", onPunch);
 

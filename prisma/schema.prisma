@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Attendance {
+  id               String   @id @default(uuid())
+  receivedAt       DateTime @default(now())
+  pin              String
+  name             String
+  verifyMode       String   @default("unknown")
+  majorEventType   Int?
+  subEventType     Int?
+  attendanceStatus String   @default("undefined")
+  punchTime        DateTime
+  deviceIp         String   @default("")
+  eventType        String   @default("")
+  label            String   @default("")
+  photoUrl         String?
+  createdAt        DateTime @default(now())
+
+  @@index([pin])
+  @@index([punchTime])
+  @@index([receivedAt])
+}

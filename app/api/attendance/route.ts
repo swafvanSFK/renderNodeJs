@@ -5,11 +5,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const punches = listPunches();
+  const punches = await listPunches();
   return NextResponse.json({ total: punches.length, punches });
 }
 
 export async function DELETE() {
-  clearPunches();
+  await clearPunches();
   return NextResponse.json({ ok: true });
 }

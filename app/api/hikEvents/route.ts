@@ -48,7 +48,7 @@ export async function POST(request: Request) {
           receivedAt: new Date().toISOString(),
           photoUrl: photo ? `/api/attendance/photo/${id}` : null,
         };
-        addPunch(punch);
+        await addPunch(punch);
         console.log(`[punch] ${punch.punchTime} ${punch.name} ${punch.pin} ${punch.label}`);
       }
     } else {
