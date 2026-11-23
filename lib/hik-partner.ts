@@ -56,8 +56,17 @@ export async function getHikPartnerToken({
     throw new HikPartnerError(`Hik-Partner returned non-JSON response (${response.status})`, response.status, raw);
   }
 
-  if (json.code !== "200" && json.code !== 200) {
-    throw new HikPartnerError(json.msg || `Hik-Partner error: ${json.code}`, json.code, json);
+  const isSuccess =
+    json.errorCode === "0" ||
+    json.errorCode === 0 ||
+    json.code === "200" ||
+    json.code === 200 ||
+    json.code === "0" ||
+    json.code === 0 ||
+    Boolean(json.data?.accessToken);
+
+  if (!isSuccess) {
+    throw new HikPartnerError(json.errorMsg || json.msg || `Hik-Partner error: ${json.errorCode || json.code}`, json.errorCode || json.code, json);
   }
 
   const data = json.data || {};

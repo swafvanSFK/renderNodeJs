@@ -1,7 +1,7 @@
 /**
  * Test script for Hik-Partner Pro OpenAPI
  * Usage:
- *   node test-hikpartner.js <YOUR_API_SECRET>
+ *   node test-hikpartner.js gKGPcL7Pcs TvQxttmM4e
  */
 
 const https = require("https");
@@ -12,56 +12,84 @@ const baseDomain = "isgp.hik-partner.com";
 
 if (!secretKey) {
   console.log("Usage: node test-hikpartner.js <YOUR_API_KEY> <YOUR_API_SECRET>");
-  console.log("Or if your API Key is gKGPcL7Pcs:");
-  console.log("  node test-hikpartner.js gKGPcL7Pcs YOUR_API_SECRET");
   process.exit(1);
 }
 
 console.log(`Connecting to Hik-Partner Pro OpenAPI (${baseDomain}) ...`);
 console.log(`Account (API Key): ${appKey}`);
 
-const postData = JSON.stringify({
-  appKey: appKey,
-  secretKey: secretKey,
-});
+function request(urlStr, method, headers, postData) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(urlStr);
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: method,
+      headers: headers,
+    };
 
-const options = {
-  hostname: baseDomain,
-  port: 443,
-  path: "/api/hpcgw/v1/token/get",
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(postData),
-  },
-};
+    const req = https.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => (body += chunk));
+      res.on("end", () => {
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(body) });
+        } catch {
+          resolve({ status: res.statusCode, data: body });
+        }
+      });
+    });
 
-const req = https.request(options, (res) => {
-  let body = "";
-  res.on("data", (chunk) => (body += chunk));
-  res.on("end", () => {
-    console.log(`HTTP Status: ${res.statusCode}`);
-    try {
-      const parsed = JSON.parse(body);
-      console.log("\nResponse from Hik-Partner Pro:");
-      console.log(JSON.stringify(parsed, null, 2));
-
-      if (parsed.code === "200" || parsed.code === 200) {
-        console.log("\n SUCCESS! Your Hik-Partner Pro OpenAPI connection is active!");
-        console.log(`Access Token: ${parsed.data.accessToken}`);
-        console.log(`Area Domain : ${parsed.data.areaDomain}`);
-      } else {
-        console.log("\n Connection failed. Check your Secret Key.");
-      }
-    } catch {
-      console.log("Raw Response:", body);
-    }
+    req.on("error", reject);
+    if (postData) req.write(typeof postData === "string" ? postData : JSON.stringify(postData));
+    req.end();
   });
-});
+}
 
-req.on("error", (e) => {
-  console.error("Connection error:", e.message);
-});
+async function run() {
+  try {
+    // 1. Get Access Token
+    const tokenRes = await request(
+      `https://${baseDomain}/api/hpcgw/v1/token/get`,
+      "POST",
+      { "Content-Type": "application/json" },
+      { appKey, secretKey }
+    );
 
-req.write(postData);
-req.end();
+    console.log("Token Response:", JSON.stringify(tokenRes.data, null, 2));
+
+    const tokenData = tokenRes.data?.data;
+    if (!tokenData || !tokenData.accessToken) {
+      console.log("\n❌ Failed to obtain accessToken. Check credentials.");
+      return;
+    }
+
+    const accessToken = tokenData.accessToken;
+    let areaDomain = tokenData.areaDomain || "https://apiisgp.hik-partner.com";
+    if (!areaDomain.startsWith("http")) areaDomain = `https://${areaDomain}`;
+
+    console.log("\n✅ SUCCESS! Authentication verified.");
+    console.log(`Access Token : ${accessToken}`);
+    console.log(`Area Gateway : ${areaDomain}`);
+
+    // 2. Fetch Device List from Hik-Partner Pro
+    console.log("\nFetching registered devices from Hik-Partner Pro cloud...");
+    const deviceRes = await request(
+      `${areaDomain}/api/hpcgw/v1/device/list`,
+      "POST",
+      {
+        "Content-Type": "application/json",
+        Token: accessToken,
+        Authorization: `Bearer ${accessToken}`,
+      },
+      { pageNo: 1, pageSize: 50 }
+    );
+
+    console.log("\nDevices Response:", JSON.stringify(deviceRes.data, null, 2));
+  } catch (err) {
+    console.error("Error:", err.message);
+  }
+}
+
+run();
